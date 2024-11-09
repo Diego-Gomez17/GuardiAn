@@ -11,16 +11,16 @@ if not os.path.exists("captura"):
     os.makedirs("captura")
 
 # Iniciar captura de video
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(1)
 
 # Inicializar YOLO con el modelo entrenado
 model = YOLO("runs/detect/train10/weights/best.pt")
 
 # Inicializar MediaPipe para la detección y seguimiento de manos y rostros
 mp_hands = mp.solutions.hands
-hands = mp_hands.Hands(min_detection_confidence=0.3, min_tracking_confidence=0.3)
+hands = mp_hands.Hands(min_detection_confidence=0.1, min_tracking_confidence=0.4)
 mp_face = mp.solutions.face_detection
-face_detection = mp_face.FaceDetection(min_detection_confidence=0.4)
+face_detection = mp_face.FaceDetection(min_detection_confidence=0.6)
 mp_drawing = mp.solutions.drawing_utils
 
 cuchillo_detectado = False
@@ -85,7 +85,7 @@ while True:
                         cv2.putText(frame, "PELIGRO POTENCIAL", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
 
                         timestamp = time.strftime("%Y%m%d-%H%M%S")
-                        cv2.imwrite(f"captura/captura_{timestamp}.png", frame_rgb)  # Guardar la imagen con timestamp
+                        cv2.imwrite(f"captura/captura_{timestamp}.png", frame)  # Guardar la imagen con timestamp
                         print(f"Imagen guardada como captura_{timestamp}.png")  # Confirmación en consola
 
                         break  # Salir del bucle al encontrar el primer punto dentro del cuchillo
