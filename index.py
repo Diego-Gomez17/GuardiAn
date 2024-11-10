@@ -25,6 +25,7 @@ mp_drawing = mp.solutions.drawing_utils
 
 cuchillo_detectado = False
 riesgo = None
+captura_realizada = False
 
 if not cap.isOpened():
     print("Error: No se pudo acceder a la cámara.")
@@ -45,7 +46,7 @@ while True:
         score = detection.conf[0]
         class_id = int(detection.cls[0])
 
-        if score >= 0.6:
+        if score >= 0.6 and class_id == 0:
             cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 2)
             label = f"CUCHILLO - ARMA BLANCA {model.names[class_id]}: {score:.2f}"
             cv2.putText(frame, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
@@ -63,6 +64,7 @@ while True:
     
     # MediaPipe detección y seguimiento de manos
     results_hands = hands.process(frame_rgb)
+    mano_detectada = False
 
     if results_hands.multi_hand_landmarks:
         for hand_landmarks in results_hands.multi_hand_landmarks:
@@ -76,13 +78,14 @@ while True:
                 hand_bbox.append((int(landmark.x * frame.shape[1]), int(landmark.y * frame.shape[0])))
 
             # Verificar si alguno de los puntos de la mano está dentro de la caja del cuchillo
-            if cuchillo_detectado == True and riesgo:
+            if cuchillo_detectado and riesgo:
                 knife_x1, knife_y1, knife_x2, knife_y2 = riesgo
                 for score in hand_bbox:
                     px, py = score
                     # Si el punto de la mano está dentro del bounding box del cuchillo, mostramos el mensaje
                     if knife_x1 < px < knife_x2 and knife_y1 < py < knife_y2:
                         
+                        mano_detectada = True
                         cv2.putText(frame, "PELIGRO POTENCIAL", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
 
                         timestamp = time.strftime("%Y%m%d-%H%M%S")
@@ -90,6 +93,8 @@ while True:
                         print(f"Imagen guardada como captura_{timestamp}.png")  # Confirmación en consola
 
                         break  # Salir del bucle al encontrar el primer punto dentro del cuchillo
+            if mano_detectada and cuchillo_detectado:
+                cv2.putText(frame, "ASS", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
 
     # MediaPipe detección de rostros
     results_face = face_detection.process(frame_rgb)
