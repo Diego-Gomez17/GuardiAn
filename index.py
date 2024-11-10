@@ -7,8 +7,8 @@ import time
 import os
 
 # Crear la carpeta 'captura' si no existe
-if not os.path.exists("captura"):
-    os.makedirs("captura")
+if not os.path.exists("capturas"):
+    os.makedirs("capturas")
 
 # Iniciar captura de video
 cap = cv2.VideoCapture(1)
@@ -20,7 +20,7 @@ model = YOLO("runs/detect/train10/weights/best.pt")
 mp_hands = mp.solutions.hands
 hands = mp_hands.Hands(min_detection_confidence=0.1, min_tracking_confidence=0.4)
 mp_face = mp.solutions.face_detection
-face_detection = mp_face.FaceDetection(min_detection_confidence=0.6)
+face_detection = mp_face.FaceDetection(min_detection_confidence=1.0)
 mp_drawing = mp.solutions.drawing_utils
 
 cuchillo_detectado = False
@@ -45,7 +45,7 @@ while True:
         score = detection.conf[0]
         class_id = int(detection.cls[0])
 
-        if score >= 0:
+        if score >= 0.6:
             cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 2)
             label = f"CUCHILLO - ARMA BLANCA {model.names[class_id]}: {score:.2f}"
             cv2.putText(frame, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
@@ -76,12 +76,13 @@ while True:
                 hand_bbox.append((int(landmark.x * frame.shape[1]), int(landmark.y * frame.shape[0])))
 
             # Verificar si alguno de los puntos de la mano está dentro de la caja del cuchillo
-            if cuchillo_detectado and riesgo:
+            if cuchillo_detectado == True and riesgo:
                 knife_x1, knife_y1, knife_x2, knife_y2 = riesgo
                 for score in hand_bbox:
                     px, py = score
                     # Si el punto de la mano está dentro del bounding box del cuchillo, mostramos el mensaje
                     if knife_x1 < px < knife_x2 and knife_y1 < py < knife_y2:
+                        
                         cv2.putText(frame, "PELIGRO POTENCIAL", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
 
                         timestamp = time.strftime("%Y%m%d-%H%M%S")
@@ -99,7 +100,7 @@ while True:
             ih, iw, _ = frame.shape
             x, y, w, h = int(bboxC.xmin * iw), int(bboxC.ymin * ih), int(bboxC.width * iw), int(bboxC.height * ih)
             cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
-            cv2.putText(frame, f"CARA: {detection.score[0]:.2f}", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
+            cv2.putText(frame, f"CARA: {detection.score[0]:.2f}", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 0, 0), 2)
 
     # Mostrar el frame con detecciones de YOLO y manos
     cv2.imshow("GuardIAn", frame)
