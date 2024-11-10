@@ -1,2 +1,5 @@
 datasets/
-*.pt
+yolo11n.pt
+yolov8n.pt
+yolov8s.pt
+yolov8x.pt
